@@ -1,37 +1,37 @@
 package store_inventory_system
 
 class Store {
-    private val products = mutableListOf<Product>()
+    private val inventoryItems = mutableListOf<InventoryItem>()
 
-    fun addProduct(product: Product) {
-        val existingProduct = products.find { it.name == product.name }
-        if (existingProduct != null) {
-            existingProduct.restock(product.stock)
+    fun addProduct(inventoryItem: InventoryItem) {
+        val existingInventoryItem = inventoryItems.find { it.name == inventoryItem.name }
+        if (existingInventoryItem != null) {
+            existingInventoryItem.restock(inventoryItem.stock)
         } else {
-            products.add(product)
-            println("${product.name} added to the inventory.")
+            inventoryItems.add(inventoryItem)
+            println("${inventoryItem.name} added to the inventory.")
         }
     }
 
-    fun searchProduct(name: String): Product? {
-        return products.find { it.name.equals(name, ignoreCase = true) }
+    fun searchInventoryItem(name: String): InventoryItem? {
+        return inventoryItems.find { it.name.lowercase() == name.lowercase() }
     }
 
     fun sellProduct(name: String, quantity: Int) {
-        val product = searchProduct(name)
-        if (product != null) {
-            product.buy(quantity)
+        val inventoryItem = searchInventoryItem(name)
+        if (inventoryItem != null) {
+            inventoryItem.buy(quantity)
         } else {
             println("Product not available!")
         }
     }
 
     fun listAllProducts() {
-        if (products.isEmpty()) {
+        if (inventoryItems.isEmpty()) {
             println("No products in the inventory.")
         } else {
             println("Available products:")
-            for (product in products) {
+            for (product in inventoryItems) {
                 println("${product.name} - Price: $${product.price}, Stock: ${product.stock}")
             }
         }

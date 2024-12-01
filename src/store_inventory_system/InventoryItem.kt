@@ -1,6 +1,10 @@
 package store_inventory_system
 
-class Product(val name: String, val price: Double, var stock: Int) {
+class InventoryItem(val name: String, val price: Double, stock: Int) {
+
+    var stock: Int = stock
+        private set
+
     fun buy(quantity: Int) {
         if (stock >= quantity) {
             stock -= quantity
