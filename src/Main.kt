@@ -83,11 +83,11 @@ fun main() {
 
  */
 
-val rules = mapOf(
-    3 to "fizz",
-    5 to "buzz",
-    4 to "haha"
-)
+//val rules = mapOf(
+//    3 to "fizz",
+//    5 to "buzz",
+//    4 to "haha"
+//)
 
 //fun main(){
 //    for(i in 1..100) {
