@@ -14,16 +14,15 @@ fun main() {
                 5. List All Products
                 6. Exit
                 Choose an option:
-
             """.trimIndent()
         )
 
         when (readlnOrNull()?.toIntOrNull()) {
-            1 -> addItem(store)
+            1 -> addItemToCatalog(store)
             2 -> restockItem(store)
             3 -> sellItem(store)
             4 -> searchItem(store)
-            5 -> store.listAllProducts()
+            5 -> store.toShowAllProducts()
             6 -> {
                 println("Exiting the program.")
                 break
@@ -46,6 +45,7 @@ private fun searchItem(store: Store) {
 }
 
 private fun sellItem(store: Store) {
+    store.toShowAllProducts()
     print("Enter product name to sell: ")
     val name = readlnOrNull()!!
     val item = store.searchInventoryItem(name)
@@ -71,7 +71,7 @@ private fun restockItem(store: Store) {
     }
 }
 
-private fun addItem(store: Store) {
+private fun addItemToCatalog(store: Store) {
     print("Enter product name: ")
     val name = readlnOrNull()!!
     print("Enter product price: ")

@@ -1,15 +1,13 @@
 package store_inventory_system
 
-class InventoryItem(val name: String, val price: Double, stock: Int) {
+class InventoryItem(val name: String, val price: Double, var stock: Int) {
 
-    var stock: Int = stock
-        private set
-
-    fun buy(quantity: Int) {
+    fun toBuyAnItem(quantity: Int) {
         if (stock >= quantity) {
             stock -= quantity
             println("You bought $quantity of $name")
         } else {
+
             println("Not enough stock available")
         }
     }
