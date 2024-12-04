@@ -2,6 +2,7 @@ package store_inventory_system
 
 class Store {
     val inventoryItems = mutableListOf<InventoryItem>()
+    public val transactions = mutableListOf<String>()
 
     fun addProduct(inventoryItem: InventoryItem) {
         val existingInventoryItem = inventoryItems.find { it.name == inventoryItem.name }
@@ -17,10 +18,12 @@ class Store {
         return inventoryItems.find { it.name.lowercase() == name.lowercase() }
     }
 
-    fun sellProduct(name: String, quantity: Int) {
+    fun sellProduct(name: String, quantity: Int, totcost: Double) {
         val inventoryItem = searchInventoryItem(name)
         if (inventoryItem != null) {
+
             inventoryItem.toBuyAnItem(quantity)
+            transactions.add("$quantity units of $name, $totcost$ \n")
         } else {
             println("Product not available!")
         }
@@ -36,4 +39,7 @@ class Store {
                 println("${product.name} - Price: $${product.price}, Stock: ${product.stock}")
             }
         }
-    }}
+    }
+
+}
+

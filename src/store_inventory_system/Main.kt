@@ -12,7 +12,8 @@ fun main() {
                 3. Sell a Product
                 4. Search for a Product
                 5. List All Products
-                6. Exit
+                6. Show yot Transactions
+                7. Exit
                 Choose an option:
             """.trimIndent()
         )
@@ -23,7 +24,8 @@ fun main() {
             3 -> sellItem(store)
             4 -> searchItem(store)
             5 -> store.toShowAllProducts()
-            6 -> {
+            6 -> transactionMaking(store)
+            7 -> {
                 println("Exiting the program.")
                 break
             }
@@ -49,13 +51,15 @@ private fun sellItem(store: Store) {
     print("Enter product name to sell: ")
     val name = readlnOrNull()!!
     val item = store.searchInventoryItem(name)
-    if(item == null) {
+    if (item == null) {
         println("We don't have this item")
         return
     }
     print("Enter quantity to sell: ")
     val quantity = readlnOrNull()!!.toInt()
-    store.sellProduct(name, quantity)
+    val price = item.price
+    val totcost = quantity * price
+    store.sellProduct(name, quantity, totcost)
 }
 
 private fun restockItem(store: Store) {
@@ -76,15 +80,21 @@ private fun addItemToCatalog(store: Store) {
     val name = readlnOrNull()!!
     print("Enter product price: ")
     val price = readlnOrNull()!!.toDoubleOrNull()
-    if(price == null) {
+    if (price == null) {
         println("Product price should be number")
         return
     }
     print("Enter initial stock: ")
     val stock = readlnOrNull()!!.toIntOrNull()
-    if(stock == null) {
+    if (stock == null) {
         println("Initial stock should be number")
         return
     }
     store.addProduct(InventoryItem(name, price, stock))
+
+}
+
+fun transactionMaking(store: Store) {
+    val item = store.transactions
+    println("Here are your all transactions: \n $item")
 }
