@@ -1,8 +1,8 @@
 package store_inventory_system
 
 class Store {
-    val inventoryItems = mutableListOf<InventoryItem>()
-    public val transactions = mutableListOf<String>()
+    private val inventoryItems = mutableListOf<InventoryItem>()
+    private val transactionManager = TransactionManager()
 
     fun addProduct(inventoryItem: InventoryItem) {
         val existingInventoryItem = inventoryItems.find { it.name == inventoryItem.name }
@@ -23,17 +23,17 @@ class Store {
         if (inventoryItem != null) {
 
             inventoryItem.toBuyAnItem(quantity)
-            transactions.add("$quantity units of $name, $totcost$ \n")
+            transactionManager.add("$quantity units of $name, $totcost$")
         } else {
             println("Product not available!")
         }
     }
 
-    fun toShowAllProducts() {
+    fun showAllProducts() {
         if (inventoryItems.isEmpty()) {
             println("No products in the inventory.")
         } else {
-            val templist = inventoryItems
+            val templist = inventoryItems.toMutableList()
             templist.removeIf { it.stock == 0 }
             for (product in templist) {
                 println("${product.name} - Price: $${product.price}, Stock: ${product.stock}")
@@ -41,5 +41,9 @@ class Store {
         }
     }
 
+    fun showTransactions() {
+        println("Here are your all transactions:")
+        transactionManager.getTransactions().forEach { println(it) }
+    }
 }
 

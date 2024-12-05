@@ -23,16 +23,28 @@ fun main() {
             2 -> restockItem(store)
             3 -> sellItem(store)
             4 -> searchItem(store)
-            5 -> store.toShowAllProducts()
-            6 -> transactionMaking(store)
+            5 -> store.showAllProducts()
+            6 -> store.showTransactions()
             7 -> {
                 println("Exiting the program.")
                 break
             }
+            8 -> testFlow(store)
 
             else -> println("Invalid option! Please try again.")
         }
     }
+}
+
+private fun testFlow(store: Store) {
+    store.addProduct(
+        InventoryItem("apple", 5.0, 15)
+    )
+    store.addProduct(
+        InventoryItem("pear", 3.0, 20)
+    )
+    store.sellProduct("apple", 2, 10.0)
+    store.sellProduct("pear", 1, 3.0)
 }
 
 private fun searchItem(store: Store) {
@@ -47,7 +59,7 @@ private fun searchItem(store: Store) {
 }
 
 private fun sellItem(store: Store) {
-    store.toShowAllProducts()
+    store.showAllProducts()
     print("Enter product name to sell: ")
     val name = readlnOrNull()!!
     val item = store.searchInventoryItem(name)
@@ -77,7 +89,7 @@ private fun restockItem(store: Store) {
 
 private fun addItemToCatalog(store: Store) {
     print("Enter product name: ")
-    val name = readlnOrNull()!!
+    val name = readlnOrNull().toString()
     print("Enter product price: ")
     val price = readlnOrNull()!!.toDoubleOrNull()
     if (price == null) {
@@ -92,9 +104,4 @@ private fun addItemToCatalog(store: Store) {
     }
     store.addProduct(InventoryItem(name, price, stock))
 
-}
-
-fun transactionMaking(store: Store) {
-    val item = store.transactions
-    println("Here are your all transactions: \n $item")
 }
