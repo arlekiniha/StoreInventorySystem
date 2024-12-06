@@ -6,6 +6,7 @@ class InventoryItem(val name: String, val price: Double, var stock: Int) {
     fun toBuyAnItem(quantity: Int) {
         if (quantity <= 0) {
             println("You can not buy negative or 0 amount of items")
+            return
         }
         if (stock >= quantity) {
             stock -= quantity

@@ -12,7 +12,7 @@ class Store {
             inventoryItems.add(inventoryItem)
             println("${inventoryItem.name} added to the inventory.")
         }
-    }
+    } 
 
     fun searchInventoryItem(name: String): InventoryItem? {
         return inventoryItems.find { it.name.lowercase() == name.lowercase() }
