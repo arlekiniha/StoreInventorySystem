@@ -12,7 +12,8 @@ fun main() {
                 3. Sell a Product
                 4. Search for a Product
                 5. List All Products
-                6. Exit
+                6. Show yot Transactions
+                7. Exit
                 Choose an option:
             """.trimIndent()
         )
@@ -22,15 +23,28 @@ fun main() {
             2 -> restockItem(store)
             3 -> sellItem(store)
             4 -> searchItem(store)
-            5 -> store.toShowAllProducts()
-            6 -> {
+            5 -> store.showAllProducts()
+            6 -> store.chooseTransactionType()
+            7 -> {
                 println("Exiting the program.")
                 break
             }
+            8 -> testFlow(store)
 
             else -> println("Invalid option! Please try again.")
         }
     }
+}
+
+private fun testFlow(store: Store) {
+    store.addProduct(
+        InventoryItem("apple", 5.0, 15)
+    )
+    store.addProduct(
+        InventoryItem("pear", 3.0, 20)
+    )
+    store.sellProduct("apple", 2, 10.0)
+    store.sellProduct("pear", 1, 3.0)
 }
 
 private fun searchItem(store: Store) {
@@ -45,17 +59,19 @@ private fun searchItem(store: Store) {
 }
 
 private fun sellItem(store: Store) {
-    store.toShowAllProducts()
+    store.showAllProducts()
     print("Enter product name to sell: ")
     val name = readlnOrNull()!!
     val item = store.searchInventoryItem(name)
-    if(item == null) {
+    if (item == null) {
         println("We don't have this item")
         return
     }
     print("Enter quantity to sell: ")
     val quantity = readlnOrNull()!!.toInt()
-    store.sellProduct(name, quantity)
+    val price = item.price
+    val totcost = quantity * price
+    store.sellProduct(name, quantity, totcost)
 }
 
 private fun restockItem(store: Store) {
@@ -73,18 +89,21 @@ private fun restockItem(store: Store) {
 
 private fun addItemToCatalog(store: Store) {
     print("Enter product name: ")
-    val name = readlnOrNull()!!
+    val name = readlnOrNull().toString()
     print("Enter product price: ")
     val price = readlnOrNull()!!.toDoubleOrNull()
-    if(price == null) {
+    if (price == null) {
         println("Product price should be number")
         return
     }
     print("Enter initial stock: ")
     val stock = readlnOrNull()!!.toIntOrNull()
-    if(stock == null) {
+    if (stock == null) {
         println("Initial stock should be number")
         return
     }
     store.addProduct(InventoryItem(name, price, stock))
+
+
+
 }
