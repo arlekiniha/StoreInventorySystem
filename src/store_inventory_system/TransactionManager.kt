@@ -1,13 +1,24 @@
 package store_inventory_system
 
 class TransactionManager {
-    private val transactions = mutableListOf<String>()
+    private val userTransactions = mutableListOf<String>()
+    private val storeTransactions = mutableListOf<String>()
 
-    fun add(transaction: String) {
-        transactions += transaction
+
+    fun addUserTransaction(transaction: String) {
+        userTransactions += transaction
     }
 
-    fun getTransactions(): List<String> {
-        return transactions
+    fun addStoreTransaction(transaction: String) {
+        storeTransactions += transaction
     }
+
+    fun getUserTransactions(): List<String> {
+        return userTransactions
+    }
+
+    fun getStoreTransactions(): List<String> {
+        return storeTransactions
+    }
+
 }

@@ -24,7 +24,7 @@ fun main() {
             3 -> sellItem(store)
             4 -> searchItem(store)
             5 -> store.showAllProducts()
-            6 -> store.showTransactions()
+            6 -> store.chooseTransactionType()
             7 -> {
                 println("Exiting the program.")
                 break
@@ -103,5 +103,7 @@ private fun addItemToCatalog(store: Store) {
         return
     }
     store.addProduct(InventoryItem(name, price, stock))
+
+
 
 }
