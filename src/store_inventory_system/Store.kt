@@ -1,20 +1,24 @@
 package store_inventory_system
 
-class Store {
+class Store(
+    private val transactionManager: TransactionManager,
+) {
+
     private val inventoryItems = mutableListOf<InventoryItem>()
-    private val transactionManager = TransactionManager()
 
     fun addProduct(inventoryItem: InventoryItem) {
         val existingInventoryItem = inventoryItems.find { it.name == inventoryItem.name }
         if (existingInventoryItem != null) {
             existingInventoryItem.restock(inventoryItem.stock)
-            transactionManager.addStoreTransaction("You restocked ${inventoryItem.name} by ${TODO()} $.")
+            transactionManager.addStoreTransaction("You restocked ${inventoryItem.name} by ${inventoryItem.stock} units.")
+            //TODO
         } else {
             inventoryItems.add(inventoryItem)
-            transactionManager.addStoreTransaction("$inventoryItem. added to your store.")
-            println("${inventoryItem.name} added to your store.")
+            transactionManager.addStoreTransaction("${inventoryItem.name} added to your store with ${inventoryItem.stock} units.")
+            println("${inventoryItem.name} added to your store with ${inventoryItem.stock} units.")
         }
     }
+
 
     fun searchInventoryItem(name: String): InventoryItem? {
         return inventoryItems.find { it.name.lowercase() == name.lowercase() }
@@ -46,13 +50,11 @@ class Store {
     fun showUserTransactions() {
         println("Here are your all transactions:")
         transactionManager.getUserTransactions().forEach { println(it) }
-        return
     }
 
     fun showStoreTransactions() {
         println("Here are all store transactions")
         transactionManager.getStoreTransactions().forEach { println(it) }
-        return
 
     }
 
