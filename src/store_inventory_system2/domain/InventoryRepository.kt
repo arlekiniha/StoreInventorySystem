@@ -14,6 +14,8 @@ interface InventoryRepository {
 class RuntimeInventoryRepository : InventoryRepository {
     private val inventoryItems = mutableListOf<InventoryItem>()
 
+    //todo if item.name already exists - dont add it
+
     override fun addItem(item: InventoryItem): Boolean {
         inventoryItems += item
         return true
