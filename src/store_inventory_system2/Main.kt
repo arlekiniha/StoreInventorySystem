@@ -16,30 +16,25 @@ fun main() {
 
     val view = View()
     val presenter = Presenter(store, view)
+    view.initPresenter(presenter)
 
     while (true) {
         println(
             """
                 ==== Store Inventory System ====
-                1. Buy a Product
-                2. Exit
+                0. Exit
+                1. Add a Product
+                2. Buy a Product
+                3. Restock a Product
                 Choose an option:
             """.trimIndent()
         )
 
         when (readlnOrNull()?.toIntOrNull()) {
-            1 -> {
-                val itemName = readln()
-                presenter.updateItemName(itemName)
-                val itemQuantity = readln()
-                presenter.updateItemQuantity(itemQuantity)
-                presenter.buyItem()
-            }
-            2 -> {
-                println("Exiting the program.")
-                break
-            }
-
+            0 -> { println("Exiting the program."); break }
+            1 -> view.addItemInput()
+            2 -> view.buyItemInput()
+            3 -> view.restockItemInput()
             else -> println("Invalid option! Please try again.")
         }
     }
