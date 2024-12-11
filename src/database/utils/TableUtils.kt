@@ -1,17 +1,14 @@
 package database.utils
 
 import database.*
+import database.ColumnType.*
+import database.Property.*
 import java.io.File
 
-fun TableRepresentation.writeToFile(file: File) {
-    file.writeText(
-        "[$name]\n"
-    )
-    file.appendText("[${columns.map { "${it.name.value}:${it.type.asString()}:${it.primaryKey.pkAsLetter()}" }.reduce { acc, s -> "$acc|$s" }}]\n")
-    records.forEach { prop: Record ->
-        file.appendText(prop.properties.map { it.asString() }.reduce { acc, s -> "$acc|$s" })
-        file.appendText("\n")
-    }
+internal fun TableRepresentation.writeToFile(file: File) {
+    file.writeText("[$name]\n")
+    file.appendText(columns.representation())
+    file.appendText(records.representation())
 }
 
 fun List<Column>.findIndexOf(column: Column, lazyMessage: () -> Any = {}): Int =
@@ -19,30 +16,30 @@ fun List<Column>.findIndexOf(column: Column, lazyMessage: () -> Any = {}): Int =
 
 fun String.nonEmptyLines() = lines().filter(String::isNotEmpty)
 
-fun String.toTable(): TableRepresentation = nonEmptyLines().let { lines ->
+internal fun String.toTable(): TableRepresentation = nonEmptyLines().let { lines ->
     val columns = lines[1].columns
     TableRepresentation(
         name = lines[0].name,
         columns = columns,
-        records = lines.drop(2).map { it.record(columns) }
+        records = lines.drop(2).map { it.record(columns) }.let { Records(it) }
     )
 }
 
-infix fun List<Property>.matches(columns: List<Column>) {
-    require(size == columns.size)
+infix fun List<Property>.matches(columns: Columns) {
+    require(size == columns.value.size)
     { "Provided record properties count are not the same as in table" }
     forEachIndexed { index, prop ->
-        require(prop matches columns[index].type)
+        require(prop matches columns.value[index].type)
         { "Property type not matches with column type at index $index." }
     }
 }
 
 // todo check if fits
-fun List<Record>.checkPrimaryKeyUniqueness(record: Record, columns: List<Column>) {
-    val indexOfPrimaryKey = columns.indexOfFirst { it.primaryKey }
-    map { r ->
+fun Records.checkPrimaryKeyUniqueness(record: Record, columns: Columns) {
+    val indexOfPrimaryKey = columns.value.indexOfFirst { it.primaryKey }
+    value.map { r ->
         r.properties.filterIndexed { index, _ ->
-            columns[index].primaryKey
+            columns.value[index].primaryKey
         }.first()
     }.none { it == record.properties[indexOfPrimaryKey] }.also {
         require(it) { "Only unique values are allowed for primary key properties." }
@@ -52,13 +49,20 @@ fun List<Record>.checkPrimaryKeyUniqueness(record: Record, columns: List<Column>
 private val String.name: String
     get() = inBrackets()
 
-private val String.columns: List<Column>
+private val String.columns: Columns
     get() = inBrackets().split('|').map {
         val (name, type, primaryKey) = it.split(':')
         require(primaryKey == "P" || primaryKey == "N")
         { "Column does not contain primary key property" }
-        Column(name.lexeme, type.columnType, primaryKey.asPrimaryKey())
-    }
+        Column(name.lexeme, type.asColumnType(), primaryKey.asPrimaryKey())
+    }.let { Columns(it) }
+
+fun String.asColumnType(): ColumnType = when (this) {
+    "INTEGER" -> INT
+    "STRING" -> STRING
+    "BOOLEAN" -> BOOLEAN
+    else -> error("Column Type is invalid")
+}
 
 fun String.asPrimaryKey(): Boolean = when (this) {
     "P" -> true
@@ -66,15 +70,50 @@ fun String.asPrimaryKey(): Boolean = when (this) {
     else -> error("Is not primary key representation")
 }
 
-private fun String.record(columns: List<Column>): Record = split('|').let { props ->
-    Record(
-        properties = props.mapIndexed { index, r ->
-            r.typed(columns[index].type)
-        }
-    )
+private fun String.record(columns: Columns): Record = Record(
+    properties = split('|').mapIndexed { index, record ->
+        record.typed(columns.value[index].type)
+    }
+)
+
+private fun Columns.representation(): String = "[${
+    value.map {
+        "${it.name.value}:${it.type.representation()}:${it.primaryKey.representation()}"
+    }.reduce { acc, s -> "$acc|$s" }
+}]\n"
+
+private fun Records.representation(): String = buildString {
+    value.forEach { prop: Record ->
+        append(prop.properties.map { it.representation() }.reduce { acc, s -> "$acc|$s" })
+        append("\n")
+    }
 }
 
-fun listOfLexeme(vararg args: String): List<Lexeme> = args.map(::Lexeme)
+internal fun Boolean.representation() = if (this) "P" else "N"
 
-fun String.inBrackets(): String =
+internal fun ColumnType.representation(): String = when (this) {
+    INT -> "INTEGER"
+    STRING -> "STRING"
+    BOOLEAN -> "BOOLEAN"
+}
+
+internal fun Property.representation() = when (this) {
+    is IntProperty -> this.value.toString()
+    is StringProperty -> this.value.replace(" ", "?") // todo check
+    is BooleanProperty -> when (this.value) {
+        true -> "TRUE"
+        false -> "FALSE"
+    }
+}
+
+internal fun String.inBrackets(): String =
     substringAfter('[').substringBeforeLast(']')
+
+internal infix fun Property.matches(columnType: ColumnType): Boolean = when (columnType) {
+    INT -> this is IntProperty
+    STRING -> this is StringProperty
+    BOOLEAN -> this is BooleanProperty
+}
+
+internal val String.lexeme
+    get() = Lexeme(this)

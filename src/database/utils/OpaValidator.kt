@@ -5,7 +5,7 @@ import java.io.File
 
 class OpaValidator(
     private val file: File,
-    private val columns: List<Column>,
+    private val columns: Columns,
 ) {
 
     /**
@@ -28,11 +28,11 @@ class OpaValidator(
                 val (name, type, primaryKey) = it.split(':')
                 require(primaryKey == "P" || primaryKey == "N")
                 { "Column does not contain primary key property" }
-                Column(name.lexeme, type.columnType, primaryKey.asPrimaryKey())
+                Column(name.lexeme, type.asColumnType(), primaryKey.asPrimaryKey())
             }
-        if(fileColumns.count { it.primaryKey } != 1) error("Table should contain exactly one primary key")
-        if (fileColumns.size != columns.size) error("Existing types count are not matching with provided types count")
-        val isTypesMatching = fileColumns.zip(this.columns).all { (f, t) -> f == t }
+        if (fileColumns.count { it.primaryKey } != 1) error("Table should contain exactly one primary key")
+        if (fileColumns.size != columns.value.size) error("Existing types count are not matching with provided types count")
+        val isTypesMatching = fileColumns.zip(columns.value).all { (f, t) -> f == t }
         if (isTypesMatching.not()) error("Existing types are not marching with provided types")
         return true
     }
@@ -53,7 +53,7 @@ class OpaValidator(
                 val (name, type, primaryKey) = it.split(':')
                 require(primaryKey == "P" || primaryKey == "N")
                 { "Column does not contain primary key property" }
-                Column(name.lexeme, type.columnType, primaryKey.asPrimaryKey())
+                Column(name.lexeme, type.asColumnType(), primaryKey.asPrimaryKey())
             }
 
         val rawRecords = lines
@@ -65,7 +65,9 @@ class OpaValidator(
 
         val typedRecords = rawRecords.map { raw ->
             raw.mapIndexed { index, r ->
-                r.typed(typedColumns[index].type)
+                val columnType = typedColumns.getOrNull(index)?.type
+                requireNotNull(columnType) { "Record size is not matching with types size" }
+                r.typed(columnType)
             }
         }
 
@@ -80,3 +82,24 @@ class OpaValidator(
         return true
     }
 }
+
+internal fun String.typed(columnType: ColumnType): Property =
+    when (columnType) {
+        ColumnType.INT -> {
+            require(isIntSyntacticallyValid())
+            { "Integer property is syntactically invalid: $this" }
+            Property.IntProperty(toInt()) // todo check
+        }
+
+        ColumnType.STRING -> {
+            require(isStringSyntacticallyValid())
+            { "String property is syntactically invalid: $this" }
+            Property.StringProperty(replace("?", " ")) // todo check
+        }
+
+        ColumnType.BOOLEAN -> {
+            require(isBooleanSyntacticallyValid())
+            { "Boolean property is syntactically invalid: $this" }
+            Property.BooleanProperty(asBoolean())
+        }
+    }

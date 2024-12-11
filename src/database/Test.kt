@@ -1,12 +1,15 @@
 package database
 
+import database.api.query
+import database.api.record
+import database.api.table
+
 
 // todos
-// dsl
-// unique values additionals
 // string spaces representation
 // check and refactor regexes
 // check and refactor validation
+// validate primary keys on init table
 fun main() {
     val table = table {
         path = "db/test.opa"
@@ -19,7 +22,7 @@ fun main() {
     }
 
     table.insert(
-        record { "Bob3" then 18 then false }
+        record { "Bob6" then 18 then false }
     )
 
     val result = table.select.allWhere(
