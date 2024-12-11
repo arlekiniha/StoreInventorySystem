@@ -3,6 +3,7 @@ package store_inventory_system2
 import store_inventory_system2.domain.RuntimeInventoryRepository
 import store_inventory_system2.domain.RuntimeTransactionsRepository
 import store_inventory_system2.domain.Store
+import store_inventory_system2.domain.TestFlow
 import store_inventory_system2.presentation.Presenter
 import store_inventory_system2.presentation.View
 
@@ -17,6 +18,7 @@ fun main() {
     val view = View(inventoryRepository)
     val presenter = Presenter(store, view)
     view.initPresenter(presenter)
+    val testFlow = TestFlow(store)
 
     while (true) {
         println(
@@ -35,6 +37,11 @@ fun main() {
             1 -> view.addItemInput()
             2 -> view.buyItemInput()
             3 -> view.restockItemInput()
+            9 -> testFlow.run {
+                    testAdd()
+                    testBuy()
+                }
+
             else -> println("Invalid option! Please try again.")
         }
     }

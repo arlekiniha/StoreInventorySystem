@@ -96,8 +96,15 @@ class View (private val inventoryRepository: InventoryRepository) {
         }
     }
 
-    // todo add specific error
     fun showError() {
         println("Something went wrong.")
+    }
+
+    fun inputError(){
+        println("Invalid input.")
+    }
+
+    fun outputError(){
+        println("We can't do it")
     }
 }

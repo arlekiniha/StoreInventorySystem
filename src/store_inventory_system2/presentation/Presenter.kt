@@ -13,7 +13,7 @@ class Presenter(
 
     fun updateItemName(name: String): Boolean {
         if (name.isBlank()) {
-            view.showError()
+            view.inputError()
             return false
         }
         itemName = name
@@ -23,7 +23,7 @@ class Presenter(
     fun updateItemQuantity(quantityInput: String): Boolean {
         val quantity = quantityInput.toIntOrNull()
         if (quantity == null || quantity <= 0) {
-            view.showError()
+            view.inputError()
             return false
         }
         itemQuantity = quantity
@@ -33,7 +33,7 @@ class Presenter(
     fun updateItemPrice(priceInput: String): Boolean {
         val price = priceInput.toIntOrNull()
         if (price == null) {
-            view.showError()
+            view.inputError()
             return false
         }
         itemPrice = price
