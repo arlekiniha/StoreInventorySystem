@@ -43,6 +43,11 @@ fun Table(
 ): Table = object : Table {
     private val tableHelper = TableHelper(path, name, columns)
 
+    init {
+        require(tableHelper.checkPrimaryKeys())
+        { "Table should not contain records with duplicate primary keys" }
+    }
+
     override val select: SelectableTable = object : SelectableTable {
         override fun firstWhere(query: Query): Record? =
             tableHelper.selectFirstWhere(query.column, query.property)

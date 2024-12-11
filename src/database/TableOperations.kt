@@ -90,3 +90,10 @@ internal fun TableHelper.updateFirstWhere(column: Column, value: Property, recor
     records[indexOfRecord] = Record(record.properties)
     table.copy(records = Records(records))
 }
+
+internal fun TableHelper.checkPrimaryKeys(): Boolean = provide { table ->
+    val primaryKeyIndex = table.columns.value.indexOfFirst { it.primaryKey }
+    table.records.value.map {
+        it.properties[primaryKeyIndex]
+    }.distinct().size == table.records.value.size
+}
