@@ -6,8 +6,8 @@ import database.utils.matches
 import database.utils.validateInputs
 
 internal fun TableHelper.insert(record: Record) = transaction { table ->
-    record.properties matches table.columns
     record.properties.validateInputs()
+    record.properties matches table.columns
     table.records.checkPrimaryKeyUniqueness(record, table.columns)
 
     val records = table.records.value.toMutableList()
@@ -78,6 +78,7 @@ internal fun TableHelper.selectAllWhere(column: Column, value: Property): List<R
 internal fun TableHelper.selectAll(): List<Record> = provide { it.records.value }
 
 internal fun TableHelper.updateFirstWhere(column: Column, value: Property, record: Record) = transaction { table ->
+    record.properties.validateInputs()
     record.properties matches table.columns
     val indexOfType = table.columns.findIndexOf(column) { "No such type in a table" }
     val indexOfRecord = table.records.value
