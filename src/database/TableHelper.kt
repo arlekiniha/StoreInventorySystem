@@ -8,7 +8,7 @@ import java.io.File
 class TableHelper(
     path: String,
     tableName: String,
-    tableTypes: List<Lexeme>,
+    tableTypes: List<Column>,
 ) {
     private val file = File(path)
     private val validator: OpaValidator = OpaValidator(file, tableTypes)
@@ -20,7 +20,7 @@ class TableHelper(
         else table = file.readText().toTable()
     }
 
-    fun transaction(block: (currentTable: TableRepresentation) -> TableRepresentation) {
+    fun transaction(block: (currentTable: TableRepresentation) -> TableRepresentation, ) {
         table = block(table)
         table.writeToFile(file)
     }

@@ -8,14 +8,14 @@ interface Table {
 }
 
 interface SelectableTable {
-    fun firstWhere(type: Lexeme, value: Lexeme): ReadRecord?
-    fun allWhere(type: Lexeme, value: Lexeme): List<ReadRecord>
+    fun firstWhere(column: Column, value: Property): ReadRecord?
+    fun allWhere(column: Column, value: Property): List<ReadRecord>
     fun all(): List<ReadRecord>
 }
 
 interface DeletableTable {
-    fun firstWhere(type: Lexeme, value: Lexeme)
-    fun allWhere(type: Lexeme, value: Lexeme)
+    fun firstWhere(column: Column, value: Property)
+    fun allWhere(column: Column, value: Property)
     fun all()
 }
 
@@ -25,22 +25,22 @@ interface InsertableTable {
 }
 
 interface UpdatableTable {
-    fun firstWhere(type: Lexeme, value: Lexeme, record: WriteRecord)
+    fun firstWhere(column: Column, value: Property, record: WriteRecord)
 }
 
 fun Table(
     path: String,
     name: String,
-    types: List<Lexeme>,
+    columns: List<Column>,
 ): Table = object : Table {
-    private val tableHelper = TableHelper(path, name, types)
+    private val tableHelper = TableHelper(path, name, columns)
 
     override val select: SelectableTable = object : SelectableTable {
-        override fun firstWhere(type: Lexeme, value: Lexeme): ReadRecord? =
-            tableHelper.selectFirstWhere(type, value)
+        override fun firstWhere(column: Column, value: Property): ReadRecord? =
+            tableHelper.selectFirstWhere(column, value)
 
-        override fun allWhere(type: Lexeme, value: Lexeme): List<ReadRecord> =
-            tableHelper.selectAllWhere(type, value)
+        override fun allWhere(column: Column, value: Property): List<ReadRecord> =
+            tableHelper.selectAllWhere(column, value)
 
         override fun all(): List<ReadRecord> =
             tableHelper.selectAll()
@@ -48,11 +48,11 @@ fun Table(
 
 
     override val delete: DeletableTable = object : DeletableTable {
-        override fun firstWhere(type: Lexeme, value: Lexeme): Unit =
-            tableHelper.deleteFirstWhere(type, value)
+        override fun firstWhere(column: Column, value: Property): Unit =
+            tableHelper.deleteFirstWhere(column, value)
 
-        override fun allWhere(type: Lexeme, value: Lexeme): Unit =
-            tableHelper.deleteAllWhere(type, value)
+        override fun allWhere(column: Column, value: Property): Unit =
+            tableHelper.deleteAllWhere(column, value)
 
         override fun all(): Unit = tableHelper.deleteAll()
 
@@ -67,7 +67,7 @@ fun Table(
     }
 
     override val update: UpdatableTable = object : UpdatableTable {
-        override fun firstWhere(type: Lexeme, value: Lexeme, record: WriteRecord): Unit =
-            tableHelper.updateFirstWhere(type, value, record)
+        override fun firstWhere(column: Column, value: Property, record: WriteRecord): Unit =
+            tableHelper.updateFirstWhere(column, value, record)
     }
 }

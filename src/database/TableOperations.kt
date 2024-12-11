@@ -1,10 +1,10 @@
 package database
 
-import database.utils.requireIndexOf
+import database.utils.findIndexOf
+import database.utils.matches
 
 fun TableHelper.insert(record: WriteRecord) = transaction { table ->
-    require(table.types.size == record.properties.size)
-    { "Provided record properties count are not the same as in table" }
+    record.properties matches table.columns
 
     val records = table.records.toMutableList()
     records += ReadRecord(
@@ -16,9 +16,9 @@ fun TableHelper.insert(record: WriteRecord) = transaction { table ->
 
 fun TableHelper.insertAll(records: List<WriteRecord>) = transaction { table ->
     records.forEach {
-        require(it.properties.size == table.types.size)
-        { "Provided record properties count are not the same as in table" }
+        it.properties matches table.columns
     }
+
 
     val tableRecords = table.records.toMutableList()
     records.forEach { record ->
@@ -30,8 +30,9 @@ fun TableHelper.insertAll(records: List<WriteRecord>) = transaction { table ->
     table.copy(records = tableRecords)
 }
 
-fun TableHelper.deleteFirstWhere(type: Lexeme, value: Lexeme) = transaction { table ->
-    val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
+// todo check
+fun TableHelper.deleteFirstWhere(column: Column, value: Property) = transaction { table ->
+    val indexOfType = table.columns.findIndexOf(column) { "No such type in a table" }
 
     val indexOfRecord = table.records
         .indexOfFirst { record: ReadRecord -> record.properties[indexOfType] == value }
@@ -42,8 +43,9 @@ fun TableHelper.deleteFirstWhere(type: Lexeme, value: Lexeme) = transaction { ta
     )
 }
 
-fun TableHelper.deleteAllWhere(type: Lexeme, value: Lexeme) = transaction { table ->
-    val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
+// todo check
+fun TableHelper.deleteAllWhere(column: Column, value: Property) = transaction { table ->
+    val indexOfType = table.columns.findIndexOf(column) { "No such type in a table" }
 
     val indexOfRecord = table.records
         .indexOfFirst { record: ReadRecord -> record.properties[indexOfType] == value }
@@ -61,20 +63,21 @@ fun TableHelper.deleteAllWhere(type: Lexeme, value: Lexeme) = transaction { tabl
 
 fun TableHelper.deleteAll() = transaction { it.copy(records = emptyList()) }
 
-fun TableHelper.selectFirstWhere(type: Lexeme, value: Lexeme): ReadRecord? = provide { table ->
-    val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
+fun TableHelper.selectFirstWhere(column: Column, value: Property): ReadRecord? = provide { table ->
+    val indexOfType = table.columns.findIndexOf(column) { "No such type in a table" }
     table.records.firstOrNull { it.properties[indexOfType] == value }
 }
 
-fun TableHelper.selectAllWhere(type: Lexeme, value: Lexeme): List<ReadRecord> = provide { table ->
-    val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
+fun TableHelper.selectAllWhere(column: Column, value: Property): List<ReadRecord> = provide { table ->
+    val indexOfType = table.columns.findIndexOf(column) { "No such type in a table" }
     table.records.filter { it.properties[indexOfType] == value }
 }
 
 fun TableHelper.selectAll(): List<ReadRecord> = provide { it.records }
 
-fun TableHelper.updateFirstWhere(type: Lexeme, value: Lexeme, record: WriteRecord) = transaction { table ->
-    val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
+fun TableHelper.updateFirstWhere(column: Column, value: Property, record: WriteRecord) = transaction { table ->
+    record.properties matches table.columns
+    val indexOfType = table.columns.findIndexOf(column) { "No such type in a table" }
     val indexOfRecord = table.records
         .indexOfFirst { it.properties[indexOfType] == value }
     require(indexOfRecord != -1) { "no such value in a table" }

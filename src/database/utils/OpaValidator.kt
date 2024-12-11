@@ -5,7 +5,7 @@ import java.io.File
 
 class OpaValidator(
     private val file: File,
-    private val types: List<Lexeme>,
+    private val types: List<Column>,
 ) {
 
     /**
@@ -20,10 +20,14 @@ class OpaValidator(
         val title = lines.first()
         if (title.matches("\\[[A-Za-z]+]".toRegex()).not()) error("Title format is invalid")
 
-        val isTypesValid = lines[1].matches("\\[(?:[A-Za-z]+\\|)*[A-Za-z]+]".toRegex())
-        if (!isTypesValid) error("Types format is invalid")
+//        val isColumnsValid = lines[1].matches("\\[(?:[A-Za-z:]+\\|)*[A-Za-z]+]".toRegex()) // todo change regex for columns
+//        if (!isColumnsValid) error("Types format is invalid")
 
-        val fileTypes = lines[1].inBrackets().split('|').props
+        val fileTypes = lines[1].inBrackets().split('|')
+            .map {
+                val (name, type) = it.split(':')
+                Column(name.lexeme, type.columnType)
+            }
         if (fileTypes.size != types.size) error("Existing types count are not matching with provided types count")
         val isTypesMatching = fileTypes.zip(types).all { (f, t) -> f == t }
         if (isTypesMatching.not()) error("Existing types are not marching with provided types")
@@ -41,17 +45,32 @@ class OpaValidator(
         if (lines.size == 2) return false
         val types = lines[1].split('|')
 
-        val rawRecords = lines.drop(2)
-        rawRecords.forEach { line ->
-            require(line.isRecordSyntacticallyValid())
-            { "Record syntax is invalid" }
+        val typedColumns = lines[1].inBrackets().split('|')
+            .map {
+                val (name, type) = it.split(':')
+                Column(name.lexeme, type.columnType)
+            }
+
+        val rawRecords = lines
+            .drop(2)
+            .onEach { line ->
+                require(line.isRecordSyntacticallyValid())
+                { "Record syntax is invalid" }
+            }.map { line -> line.split('|') }
+
+        val typedRecords = rawRecords.map { raw ->
+            raw.drop(1).mapIndexed { index, r ->
+                r.typed(typedColumns[index].type)
+            }
         }
 
-        rawRecords
-            .map { line -> line.split('|') }
+        typedRecords
             .forEach { record ->
-                require(record.size == types.size + 1)
+                require(record.size == types.size)
                 { "Record properties count is not matching with types size" }
+                record.forEachIndexed { index, prop ->
+                    prop matches typedColumns[index].type
+                }
             }
         return true
     }
