@@ -1,7 +1,7 @@
 package database.utils
 
 fun String.isRecordSyntacticallyValid(): Boolean =
-    matches("^(?:[a-zA-Z0-9]+(?:\\|[a-zA-Z0-9]+)*)?\$".toRegex())
+    matches("^(?:[a-zA-Z0-9?]+(?:\\|[a-zA-Z0-9?]+)*)?\$".toRegex())
 
 
 fun String.isLexemeSyntacticallyValid(): Boolean =
@@ -11,7 +11,7 @@ fun String.isIntSyntacticallyValid(): Boolean =
     matches("^[0-9]+\$".toRegex())
 
 fun String.isStringSyntacticallyValid(): Boolean =
-    matches("^[a-zA-Z0-9 _-]+\$".toRegex())
+    matches("^[a-zA-Z0-9? _-]+\$".toRegex())
 
 fun String.isBooleanSyntacticallyValid(): Boolean =
     this == "TRUE" || this == "FALSE"

@@ -5,22 +5,183 @@ import database.utils.*
 data class TableRepresentation(
     val name: String,
     val columns: List<Column>,
-    val records: List<ReadRecord>,
+    val records: List<Record>,
 )
 
-data class ReadRecord(
-    val id: Int,
+@JvmInline
+value class Record internal constructor(
     val properties: List<Property>,
 )
+
+class RecordScope internal constructor() {
+    private val properties = mutableListOf<Property>()
+
+    val String.add: Unit
+        get() {
+            properties += text(this)
+        }
+
+    val Int.add: Unit
+        get() {
+            properties += integer(this)
+        }
+
+    val Boolean.add: Unit
+        get() {
+            properties += boolean(this)
+        }
+
+    infix fun String.then(prop: Int): Property {
+        val property = text(this)
+        val property2 = integer(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun String.then(prop: String): Property {
+        val property = text(this)
+        val property2 = text(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun String.then(prop: Boolean): Property {
+        val property = text(this)
+        val property2 = boolean(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Boolean.then(prop: Int): Property {
+        val property = boolean(this)
+        val property2 = integer(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Boolean.then(prop: String): Property {
+        val property = boolean(this)
+        val property2 = text(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Boolean.then(prop: Boolean): Property {
+        val property = boolean(this)
+        val property2 = boolean(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Int.then(prop: Int): Property {
+        val property = integer(this)
+        val property2 = integer(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Int.then(prop: String): Property {
+        val property = integer(this)
+        val property2 = text(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Int.then(prop: Boolean): Property {
+        val property = integer(this)
+        val property2 = boolean(prop)
+        properties += property
+        properties += property2
+        return property2
+    }
+
+    infix fun Property.then(prop: String): Property {
+        val property = text(prop)
+        properties += property
+        return property
+    }
+
+    infix fun Property.then(prop: Int): Property {
+        val property = integer(prop)
+        properties += property
+        return property
+    }
+
+    infix fun Property.then(prop: Boolean): Property {
+        val property = boolean(prop)
+        properties += property
+        return property
+    }
+
+    internal fun toColumns() = Record(properties)
+}
+
+fun record(builder: RecordScope.() -> Unit): Record =
+    RecordScope().apply(builder).toColumns()
+
+operator fun Property.plus(property: Property): Record = Record(listOf(this, property))
+operator fun Record.plus(property: Property): Record = Record(properties + listOf(property))
+
+@JvmInline
+value class Columns internal constructor(val value: List<Column>)
 
 data class Column(
     val name: Lexeme,
     val type: ColumnType,
+    val primaryKey: Boolean,
 )
 
-fun ColumnText(name: String) = Column(name.lexeme, ColumnType.STRING)
-fun ColumnInt(name: String) = Column(name.lexeme, ColumnType.INT)
-fun ColumnBoolean(name: String) = Column(name.lexeme, ColumnType.BOOLEAN)
+class ColumnScope internal constructor() {
+    private val columns = mutableListOf<Column>()
+
+    val String.int: Unit
+        get() {
+            columns += columnInteger(this)
+        }
+
+    val String.text: Unit
+        get() {
+            columns += columnText(this)
+        }
+
+    val String.boolean: Unit
+        get() {
+            columns += columnBoolean(this)
+        }
+
+    internal fun toColumns() = Columns(columns)
+}
+
+//todo rename
+internal fun columnsBuilder(primaryKey: String, block: ColumnScope.() -> Unit): Columns =
+    ColumnScope().apply(block).toColumns()
+        .value
+        .also {
+            require(it.isNotEmpty()) { "Table columns should contains at least one column" }
+        }
+        .map { column ->
+            if (column.name.value == primaryKey) Column(column.name, column.type, true)
+            else column
+        }.let {
+            require(it.count(Column::primaryKey) == 1)
+            { "Table columns should contains exactly one primary key" }
+            Columns(it)
+        }
+
+// todo rename
+fun Boolean.pkAsLetter() = if (this) "P" else "N"
+
+fun columnText(name: String, primaryKey: Boolean = false) = Column(name.lexeme, ColumnType.STRING, primaryKey)
+fun columnInteger(name: String, primaryKey: Boolean = false) = Column(name.lexeme, ColumnType.INT, primaryKey)
+fun columnBoolean(name: String, primaryKey: Boolean = false) = Column(name.lexeme, ColumnType.BOOLEAN, primaryKey)
 
 enum class ColumnType {
     INT,
@@ -63,11 +224,11 @@ fun String.typed(columnType: ColumnType): Property =
         }
     }
 
-fun Text(text: String) = Property.StringProperty(text) // todo check
+fun text(text: String) = Property.StringProperty(text) // todo check
 
-fun Integer(number: Int) = Property.IntProperty(number) // todo check
+fun integer(number: Int) = Property.IntProperty(number) // todo check
 
-fun Boolean(boolean: Boolean) = Property.BooleanProperty(boolean) // todo check
+fun boolean(boolean: Boolean) = Property.BooleanProperty(boolean) // todo check
 
 sealed interface Property {
 
@@ -110,7 +271,3 @@ val List<String>.lexemes
 
 val List<Lexeme>.strings
     get() = map(Lexeme::value)
-
-data class WriteRecord(
-    val properties: List<Property>,
-)

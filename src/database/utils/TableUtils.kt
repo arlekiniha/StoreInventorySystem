@@ -7,9 +7,8 @@ fun TableRepresentation.writeToFile(file: File) {
     file.writeText(
         "[$name]\n"
     )
-    file.appendText("[${columns.map { "${it.name.value}:${it.type.asString()}" }.reduce { acc, s -> "$acc|$s" }}]\n")
-    records.forEach { prop: ReadRecord ->
-        file.appendText("${prop.id}|")
+    file.appendText("[${columns.map { "${it.name.value}:${it.type.asString()}:${it.primaryKey.pkAsLetter()}" }.reduce { acc, s -> "$acc|$s" }}]\n")
+    records.forEach { prop: Record ->
         file.appendText(prop.properties.map { it.asString() }.reduce { acc, s -> "$acc|$s" })
         file.appendText("\n")
     }
@@ -38,19 +37,38 @@ infix fun List<Property>.matches(columns: List<Column>) {
     }
 }
 
+// todo check if fits
+fun List<Record>.checkPrimaryKeyUniqueness(record: Record, columns: List<Column>) {
+    val indexOfPrimaryKey = columns.indexOfFirst { it.primaryKey }
+    map { r ->
+        r.properties.filterIndexed { index, _ ->
+            columns[index].primaryKey
+        }.first()
+    }.none { it == record.properties[indexOfPrimaryKey] }.also {
+        require(it) { "Only unique values are allowed for primary key properties." }
+    }
+}
+
 private val String.name: String
     get() = inBrackets()
 
 private val String.columns: List<Column>
     get() = inBrackets().split('|').map {
-        val (name, type) = it.split(':')
-        Column(name.lexeme, type.columnType)
+        val (name, type, primaryKey) = it.split(':')
+        require(primaryKey == "P" || primaryKey == "N")
+        { "Column does not contain primary key property" }
+        Column(name.lexeme, type.columnType, primaryKey.asPrimaryKey())
     }
 
-private fun String.record(columns: List<Column>): ReadRecord = split('|').let { props ->
-    ReadRecord(
-        id = props.first().toInt(),
-        properties = props.drop(1).mapIndexed { index, r ->
+fun String.asPrimaryKey(): Boolean = when (this) {
+    "P" -> true
+    "N" -> false
+    else -> error("Is not primary key representation")
+}
+
+private fun String.record(columns: List<Column>): Record = split('|').let { props ->
+    Record(
+        properties = props.mapIndexed { index, r ->
             r.typed(columns[index].type)
         }
     )

@@ -1,30 +1,30 @@
 package database
 
+
 // todos
 // dsl
-// ids are probably redundant or needs recalculation
-// unique values
+// unique values additionals
+// string spaces representation
+// check and refactor regexes
+// check and refactor validation
 fun main() {
-    val table = Table(
-        path = "db/test.opa",
-        name = "test",
-        columns = listOf(
-            ColumnText("name"),
-            ColumnInt("age"),
-            ColumnBoolean("is_student")
-        ),
+    val table = table {
+        path = "db/test.opa"
+        name = "test"
+        columns("name") {
+            "name".text
+            "age".int
+            "is_student".boolean
+        }
+    }
+
+    table.insert(
+        record { "Bob3" then 18 then false }
     )
 
-//    val result = table.update.firstWhere(
-//        ColumnInt("age"),
-//        Integer(13),
-//        WriteRecord(
-//            listOf(
-//                Text("Ivan"),
-//                Integer(12),
-//                Boolean(false),
-//            )
-//        )
-//    )
-//    println(result)
+    val result = table.select.allWhere(
+        query { "is_student" eq false }
+    )
+
+    result.forEach { println(it) }
 }

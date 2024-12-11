@@ -8,10 +8,48 @@ interface Table {
 }
 
 interface SelectableTable {
-    fun firstWhere(column: Column, value: Property): ReadRecord?
-    fun allWhere(column: Column, value: Property): List<ReadRecord>
-    fun all(): List<ReadRecord>
+    fun firstWhere(column: Column, value: Property): Record?
+    fun firstWhere(query: QueryEntry): Record? = firstWhere(query.column, query.property)
+    fun allWhere(column: Column, value: Property): List<Record>
+    fun allWhere(query: QueryEntry): List<Record> = allWhere(query.column, query.property)
+    fun all(): List<Record>
 }
+
+data class QueryEntry(
+    val column: Column,
+    val property: Property,
+)
+
+class QueryEntryScope internal constructor() {
+
+    var property: Property? = null
+    var column: Column? = null
+
+    infix fun String.eq(value: String) {
+        column = columnText(this)
+        property = text(value)
+    }
+
+    infix fun String.eq(value: Int) {
+        column = columnInteger(this)
+        property = integer(value)
+    }
+
+    infix fun String.eq(value: Boolean) {
+        column = columnBoolean(this)
+        property = boolean(value)
+    }
+
+    fun toQueryEntry(): QueryEntry {
+        val col = requireNotNull(column)
+        { "Column is not specified" }
+        val prop = requireNotNull(property) { "Property is not specified" }
+        return QueryEntry(col, prop)
+    }
+}
+
+fun query(query: QueryEntryScope.() -> Unit): QueryEntry =
+    QueryEntryScope().apply(query).toQueryEntry()
 
 interface DeletableTable {
     fun firstWhere(column: Column, value: Property)
@@ -20,29 +58,29 @@ interface DeletableTable {
 }
 
 interface InsertableTable {
-    operator fun invoke(record: WriteRecord)
-    fun all(records: List<WriteRecord>)
+    operator fun invoke(record: Record)
+    fun all(records: List<Record>)
 }
 
 interface UpdatableTable {
-    fun firstWhere(column: Column, value: Property, record: WriteRecord)
+    fun firstWhere(column: Column, value: Property, record: Record)
 }
 
 fun Table(
     path: String,
     name: String,
-    columns: List<Column>,
+    columns: Columns,
 ): Table = object : Table {
-    private val tableHelper = TableHelper(path, name, columns)
+    private val tableHelper = TableHelper(path, name, columns.value)
 
     override val select: SelectableTable = object : SelectableTable {
-        override fun firstWhere(column: Column, value: Property): ReadRecord? =
+        override fun firstWhere(column: Column, value: Property): Record? =
             tableHelper.selectFirstWhere(column, value)
 
-        override fun allWhere(column: Column, value: Property): List<ReadRecord> =
+        override fun allWhere(column: Column, value: Property): List<Record> =
             tableHelper.selectAllWhere(column, value)
 
-        override fun all(): List<ReadRecord> =
+        override fun all(): List<Record> =
             tableHelper.selectAll()
     }
 
@@ -59,15 +97,16 @@ fun Table(
     }
 
     override val insert: InsertableTable = object : InsertableTable {
-        override operator fun invoke(record: WriteRecord): Unit = tableHelper.insert(record)
+        override operator fun invoke(record: Record): Unit = tableHelper.insert(record)
 
-        override fun all(records: List<WriteRecord>): Unit =
+        override fun all(records: List<Record>): Unit =
             tableHelper.insertAll(records)
 
     }
 
     override val update: UpdatableTable = object : UpdatableTable {
-        override fun firstWhere(column: Column, value: Property, record: WriteRecord): Unit =
+        override fun firstWhere(column: Column, value: Property, record: Record): Unit =
             tableHelper.updateFirstWhere(column, value, record)
     }
 }
+

@@ -5,7 +5,7 @@ import java.io.File
 
 class OpaValidator(
     private val file: File,
-    private val types: List<Column>,
+    private val columns: List<Column>,
 ) {
 
     /**
@@ -23,13 +23,16 @@ class OpaValidator(
 //        val isColumnsValid = lines[1].matches("\\[(?:[A-Za-z:]+\\|)*[A-Za-z]+]".toRegex()) // todo change regex for columns
 //        if (!isColumnsValid) error("Types format is invalid")
 
-        val fileTypes = lines[1].inBrackets().split('|')
+        val fileColumns = lines[1].inBrackets().split('|')
             .map {
-                val (name, type) = it.split(':')
-                Column(name.lexeme, type.columnType)
+                val (name, type, primaryKey) = it.split(':')
+                require(primaryKey == "P" || primaryKey == "N")
+                { "Column does not contain primary key property" }
+                Column(name.lexeme, type.columnType, primaryKey.asPrimaryKey())
             }
-        if (fileTypes.size != types.size) error("Existing types count are not matching with provided types count")
-        val isTypesMatching = fileTypes.zip(types).all { (f, t) -> f == t }
+        if(fileColumns.count { it.primaryKey } != 1) error("Table should contain exactly one primary key")
+        if (fileColumns.size != columns.size) error("Existing types count are not matching with provided types count")
+        val isTypesMatching = fileColumns.zip(this.columns).all { (f, t) -> f == t }
         if (isTypesMatching.not()) error("Existing types are not marching with provided types")
         return true
     }
@@ -47,8 +50,10 @@ class OpaValidator(
 
         val typedColumns = lines[1].inBrackets().split('|')
             .map {
-                val (name, type) = it.split(':')
-                Column(name.lexeme, type.columnType)
+                val (name, type, primaryKey) = it.split(':')
+                require(primaryKey == "P" || primaryKey == "N")
+                { "Column does not contain primary key property" }
+                Column(name.lexeme, type.columnType, primaryKey.asPrimaryKey())
             }
 
         val rawRecords = lines
@@ -59,7 +64,7 @@ class OpaValidator(
             }.map { line -> line.split('|') }
 
         val typedRecords = rawRecords.map { raw ->
-            raw.drop(1).mapIndexed { index, r ->
+            raw.mapIndexed { index, r ->
                 r.typed(typedColumns[index].type)
             }
         }
