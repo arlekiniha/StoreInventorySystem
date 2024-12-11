@@ -1,14 +1,11 @@
 package database
 
 import database.api.query
-import database.api.record
+import database.api.records
 import database.api.table
+import kotlin.random.Random
 
 
-// todos
-// string spaces representation
-// check and refactor regexes
-// check and refactor validation
 fun main() {
     val table = table {
         path = "db/test.opa"
@@ -20,13 +17,19 @@ fun main() {
         }
     }
 
-    table.insert(
-        record { "Bob7" then 18 then false }
+    table.delete.all()
+    table.insert.all(
+        records {
+            repeat(1000) {
+                add { "Test$it" then it then Random.nextBoolean() }
+            }
+        },
     )
 
     val result = table.select.allWhere(
-        query { "is_student" eq false }
-    )
+        query { "is_student" eq true }
+    ).count()
 
-    result.forEach { println(it) }
+    println(result)
+//    result.forEach { println(it) }
 }

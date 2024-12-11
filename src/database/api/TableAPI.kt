@@ -29,7 +29,7 @@ interface DeletableTable {
 
 interface InsertableTable {
     operator fun invoke(record: Record)
-    fun all(records: List<Record>)
+    fun all(records: Records)
 }
 
 interface UpdatableTable {
@@ -74,8 +74,8 @@ fun Table(
     override val insert: InsertableTable = object : InsertableTable {
         override operator fun invoke(record: Record): Unit = tableHelper.insert(record)
 
-        override fun all(records: List<Record>): Unit =
-            tableHelper.insertAll(records)
+        override fun all(records: Records): Unit =
+            tableHelper.insertAll(records.value)
 
     }
 

@@ -11,8 +11,8 @@ internal fun TableRepresentation.writeToFile(file: File) {
     file.appendText(records.representation())
 }
 
-fun List<Column>.findIndexOf(column: Column, lazyMessage: () -> Any = {}): Int =
-    indexOfFirst { it == column }.also { require(it != -1, lazyMessage) }
+fun Columns.findIndexOf(column: Column, lazyMessage: () -> Any = {}): Int =
+    value.indexOfFirst { it.name == column.name }.also { require(it != -1, lazyMessage) }
 
 fun String.nonEmptyLines() = lines().filter(String::isNotEmpty)
 
@@ -34,7 +34,19 @@ infix fun List<Property>.matches(columns: Columns) {
     }
 }
 
-// todo check if fits
+fun List<Property>.validateInputs() {
+    forEach { prop ->
+        when(prop) {
+            is BooleanProperty -> { /* no-op */ }
+            is IntProperty -> { /* no-op */ }
+            is StringProperty -> {
+                require(prop.value.isInputSyntacticallyValid())
+                { "Provided string property does not match input rules" }
+            }
+        }
+    }
+}
+
 fun Records.checkPrimaryKeyUniqueness(record: Record, columns: Columns) {
     val indexOfPrimaryKey = columns.value.indexOfFirst { it.primaryKey }
     value.map { r ->
@@ -99,7 +111,7 @@ internal fun ColumnType.representation(): String = when (this) {
 
 internal fun Property.representation() = when (this) {
     is IntProperty -> this.value.toString()
-    is StringProperty -> this.value.replace(" ", "?") // todo check
+    is StringProperty -> this.value.replace(" ", "?")
     is BooleanProperty -> when (this.value) {
         true -> "TRUE"
         false -> "FALSE"

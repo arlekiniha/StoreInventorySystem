@@ -20,9 +20,6 @@ class OpaValidator(
         val title = lines.first()
         if (title.matches("\\[[A-Za-z]+]".toRegex()).not()) error("Title format is invalid")
 
-//        val isColumnsValid = lines[1].matches("\\[(?:[A-Za-z:]+\\|)*[A-Za-z]+]".toRegex()) // todo change regex for columns
-//        if (!isColumnsValid) error("Types format is invalid")
-
         val fileColumns = lines[1].inBrackets().split('|')
             .map {
                 val (name, type, primaryKey) = it.split(':')
@@ -88,13 +85,13 @@ internal fun String.typed(columnType: ColumnType): Property =
         ColumnType.INT -> {
             require(isIntSyntacticallyValid())
             { "Integer property is syntactically invalid: $this" }
-            Property.IntProperty(toInt()) // todo check
+            Property.IntProperty(toInt())
         }
 
         ColumnType.STRING -> {
             require(isStringSyntacticallyValid())
             { "String property is syntactically invalid: $this" }
-            Property.StringProperty(replace("?", " ")) // todo check
+            Property.StringProperty(replace("?", " "))
         }
 
         ColumnType.BOOLEAN -> {

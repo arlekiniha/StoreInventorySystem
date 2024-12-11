@@ -64,6 +64,15 @@ class ColumnScope internal constructor() {
     }
 }
 
+class RecordsScope internal constructor() {
+    private val records = mutableListOf<Record>()
+    fun add(builder: RecordScope.() -> Unit) {
+        records += record(builder)
+    }
+
+    fun toRecords(): Records = Records(records)
+}
+
 class RecordScope internal constructor() {
     private val properties = mutableListOf<Property>()
 
@@ -209,6 +218,9 @@ fun query(query: QueryScope.() -> Unit): Query =
 
 fun record(builder: RecordScope.() -> Unit): Record =
     RecordScope().apply(builder).toColumns()
+
+fun records(builder: RecordsScope.() -> Unit): Records =
+    RecordsScope().apply(builder).toRecords()
 
 internal fun text(text: String): Property.StringProperty =
     Property.StringProperty(text)
