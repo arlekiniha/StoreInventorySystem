@@ -6,10 +6,10 @@ fun TableRepresentation.writeToFile(file: File) {
     file.writeText(
         "[$name]\n"
     )
-    file.appendText("[${types.reduce { acc, s -> "$acc|$s" }}]\n")
+    file.appendText("[${types.strings.reduce { acc, s -> "$acc|$s" }}]\n")
     records.forEach { prop: ReadRecord ->
         file.appendText("${prop.id}|")
-        file.appendText(prop.properties.reduce { acc, s -> "$acc|$s" })
+        file.appendText(prop.properties.strings.reduce { acc, s -> "$acc|$s" })
         file.appendText("\n")
     }
 }
@@ -22,7 +22,7 @@ fun String.nonEmptyLines() = lines().filter(String::isNotEmpty)
 fun String.toTable(): TableRepresentation = nonEmptyLines().let { lines ->
     TableRepresentation(
         name = lines[0].name,
-        types = lines[1].types,
+        types = lines[1].types.props,
         records = lines.drop(2).map { it.record }
     )
 }
@@ -37,9 +37,11 @@ private val String.record: ReadRecord
     get() = split('|').let { props ->
         ReadRecord(
             id = props.first().toInt(),
-            properties = props.drop(1),
+            properties = props.drop(1).props,
         )
     }
 
-private fun String.inBrackets(): String =
+fun listOfLexeme(vararg args: String): List<Lexeme> = args.map(::Lexeme)
+
+fun String.inBrackets(): String =
     substringAfter('[').substringBeforeLast(']')

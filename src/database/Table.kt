@@ -6,44 +6,39 @@ interface Table {
     fun insert(record: WriteRecord)
     fun insertAll(records: List<WriteRecord>)
 
-    fun deleteFirstWhere(type: String, value: String)
-    fun deleteAllWhere(type: String, value: String)
+    fun deleteFirstWhere(type: Lexeme, value: Lexeme)
+    fun deleteAllWhere(type: Lexeme, value: Lexeme)
     fun deleteAll()
 
-    fun selectFirstWhere(type: String, value: String): ReadRecord?
-    fun selectAllWhere(type: String, value: String): List<ReadRecord>
+    fun selectFirstWhere(type: Lexeme, value: Lexeme): ReadRecord?
+    fun selectAllWhere(type: Lexeme, value: Lexeme): List<ReadRecord>
     fun selectAll(): List<ReadRecord>
 
-    fun updateFirstWhere(type: String, value: String, record: WriteRecord)
+    fun updateFirstWhere(type: Lexeme, value: Lexeme, record: WriteRecord)
 }
 
 fun Table(
     path: String,
     name: String,
-    types: List<String>,
-    validateRecords: Boolean = false,
+    types: List<Lexeme>,
 ): Table = DefaultTable(
     path = path,
     tableName = name,
     tableTypes = types,
-    validateRecords = validateRecords,
 )
 
 private class DefaultTable(
     path: String,
     tableName: String,
-    tableTypes: List<String>,
-    validateRecords: Boolean,
+    tableTypes: List<Lexeme>,
 ) : Table {
     private val file = File(path)
-    private val validator: OpaValidator = OpaValidator(file)
+    private val validator: OpaValidator = OpaValidator(file, tableTypes)
     private var table = TableRepresentation(tableName, tableTypes, emptyList())
 
     init {
         require(tableTypes.isNotEmpty()) { "Table must have at least one type" }
-        val isValid = if (validateRecords) validator.isRecordsValid() else validator.isMetadataValid()
-
-        if (isValid.not()) transaction { table }
+        if (validator.isRecordsValid().not()) transaction { table }
         else table = file.readText().toTable()
     }
 
@@ -75,7 +70,7 @@ private class DefaultTable(
         table.copy(records = tableRecords)
     }
 
-    override fun deleteFirstWhere(type: String, value: String) = transaction {
+    override fun deleteFirstWhere(type: Lexeme, value: Lexeme) = transaction {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
 
         val indexOfRecord = table.records
@@ -87,7 +82,7 @@ private class DefaultTable(
         )
     }
 
-    override fun deleteAllWhere(type: String, value: String) = transaction {
+    override fun deleteAllWhere(type: Lexeme, value: Lexeme) = transaction {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
 
         val indexOfRecord = table.records
@@ -106,12 +101,12 @@ private class DefaultTable(
 
     override fun deleteAll() = transaction { table.copy(records = emptyList()) }
 
-    override fun selectFirstWhere(type: String, value: String): ReadRecord? {
+    override fun selectFirstWhere(type: Lexeme, value: Lexeme): ReadRecord? {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
         return table.records.firstOrNull { it.properties[indexOfType] == value }
     }
 
-    override fun selectAllWhere(type: String, value: String): List<ReadRecord> {
+    override fun selectAllWhere(type: Lexeme, value: Lexeme): List<ReadRecord> {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
         return table.records.filter { it.properties[indexOfType] == value }
     }
@@ -119,7 +114,7 @@ private class DefaultTable(
     override fun selectAll(): List<ReadRecord> = table.records
 
     // todo check
-    override fun updateFirstWhere(type: String, value: String, record: WriteRecord) = transaction {
+    override fun updateFirstWhere(type: Lexeme, value: Lexeme, record: WriteRecord) = transaction {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
         val indexOfRecord = table.records
             .indexOfFirst { it.properties[indexOfType] == value }
