@@ -1,37 +1,88 @@
 package database
 
+import database.utils.OpaValidator
+import database.utils.requireIndexOf
+import database.utils.toTable
+import database.utils.writeToFile
 import java.io.File
 
 interface Table {
-    fun insert(record: WriteRecord)
-    fun insertAll(records: List<WriteRecord>)
+    val select: SelectableTable
+    val delete: DeletableTable
+    val insert: InsertableTable
+    val update: UpdatableTable
+}
 
-    fun deleteFirstWhere(type: Lexeme, value: Lexeme)
-    fun deleteAllWhere(type: Lexeme, value: Lexeme)
-    fun deleteAll()
+interface SelectableTable {
+    fun firstWhere(type: Lexeme, value: Lexeme): ReadRecord?
+    fun allWhere(type: Lexeme, value: Lexeme): List<ReadRecord>
+    fun all(): List<ReadRecord>
+}
 
-    fun selectFirstWhere(type: Lexeme, value: Lexeme): ReadRecord?
-    fun selectAllWhere(type: Lexeme, value: Lexeme): List<ReadRecord>
-    fun selectAll(): List<ReadRecord>
+interface DeletableTable {
+    fun firstWhere(type: Lexeme, value: Lexeme)
+    fun allWhere(type: Lexeme, value: Lexeme)
+    fun all()
+}
 
-    fun updateFirstWhere(type: Lexeme, value: Lexeme, record: WriteRecord)
+interface InsertableTable {
+    operator fun invoke(record: WriteRecord)
+    fun all(records: List<WriteRecord>)
+}
+
+interface UpdatableTable {
+    fun firstWhere(type: Lexeme, value: Lexeme, record: WriteRecord)
 }
 
 fun Table(
     path: String,
     name: String,
     types: List<Lexeme>,
-): Table = DefaultTable(
-    path = path,
-    tableName = name,
-    tableTypes = types,
-)
+): Table = object : Table {
+    private val tableImpl = TableImpl(path, name, types)
 
-private class DefaultTable(
+    override val select: SelectableTable = object : SelectableTable {
+        override fun firstWhere(type: Lexeme, value: Lexeme): ReadRecord? =
+            tableImpl.selectFirstWhere(type, value)
+
+        override fun allWhere(type: Lexeme, value: Lexeme): List<ReadRecord> =
+            tableImpl.selectAllWhere(type, value)
+
+        override fun all(): List<ReadRecord> =
+            tableImpl.selectAll()
+    }
+
+
+    override val delete: DeletableTable = object : DeletableTable {
+        override fun firstWhere(type: Lexeme, value: Lexeme): Unit =
+            tableImpl.deleteFirstWhere(type, value)
+
+        override fun allWhere(type: Lexeme, value: Lexeme): Unit =
+            tableImpl.deleteAllWhere(type, value)
+
+        override fun all(): Unit = tableImpl.deleteAll()
+
+    }
+
+    override val insert: InsertableTable = object : InsertableTable {
+        override operator fun invoke(record: WriteRecord): Unit = tableImpl.insert(record)
+
+        override fun all(records: List<WriteRecord>): Unit =
+            tableImpl.insertAll(records)
+
+    }
+
+    override val update: UpdatableTable = object : UpdatableTable {
+        override fun firstWhere(type: Lexeme, value: Lexeme, record: WriteRecord): Unit =
+            tableImpl.updateFirstWhere(type, value, record)
+    }
+}
+
+private class TableImpl(
     path: String,
     tableName: String,
     tableTypes: List<Lexeme>,
-) : Table {
+) {
     private val file = File(path)
     private val validator: OpaValidator = OpaValidator(file, tableTypes)
     private var table = TableRepresentation(tableName, tableTypes, emptyList())
@@ -42,7 +93,7 @@ private class DefaultTable(
         else table = file.readText().toTable()
     }
 
-    override fun insert(record: WriteRecord) = transaction {
+    fun insert(record: WriteRecord) = transaction {
         require(table.types.size == record.properties.size)
         { "Provided record properties count are not the same as in table" }
 
@@ -54,7 +105,7 @@ private class DefaultTable(
         table.copy(records = records)
     }
 
-    override fun insertAll(records: List<WriteRecord>) = transaction {
+    fun insertAll(records: List<WriteRecord>) = transaction {
         records.forEach {
             require(it.properties.size == table.types.size)
             { "Provided record properties count are not the same as in table" }
@@ -70,7 +121,7 @@ private class DefaultTable(
         table.copy(records = tableRecords)
     }
 
-    override fun deleteFirstWhere(type: Lexeme, value: Lexeme) = transaction {
+    fun deleteFirstWhere(type: Lexeme, value: Lexeme) = transaction {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
 
         val indexOfRecord = table.records
@@ -82,7 +133,7 @@ private class DefaultTable(
         )
     }
 
-    override fun deleteAllWhere(type: Lexeme, value: Lexeme) = transaction {
+    fun deleteAllWhere(type: Lexeme, value: Lexeme) = transaction {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
 
         val indexOfRecord = table.records
@@ -99,22 +150,21 @@ private class DefaultTable(
         )
     }
 
-    override fun deleteAll() = transaction { table.copy(records = emptyList()) }
+    fun deleteAll() = transaction { table.copy(records = emptyList()) }
 
-    override fun selectFirstWhere(type: Lexeme, value: Lexeme): ReadRecord? {
+    fun selectFirstWhere(type: Lexeme, value: Lexeme): ReadRecord? {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
         return table.records.firstOrNull { it.properties[indexOfType] == value }
     }
 
-    override fun selectAllWhere(type: Lexeme, value: Lexeme): List<ReadRecord> {
+    fun selectAllWhere(type: Lexeme, value: Lexeme): List<ReadRecord> {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
         return table.records.filter { it.properties[indexOfType] == value }
     }
 
-    override fun selectAll(): List<ReadRecord> = table.records
+    fun selectAll(): List<ReadRecord> = table.records
 
-    // todo check
-    override fun updateFirstWhere(type: Lexeme, value: Lexeme, record: WriteRecord) = transaction {
+    fun updateFirstWhere(type: Lexeme, value: Lexeme, record: WriteRecord) = transaction {
         val indexOfType = table.types.requireIndexOf(type) { "No such type in a table" }
         val indexOfRecord = table.records
             .indexOfFirst { it.properties[indexOfType] == value }

@@ -1,5 +1,7 @@
 package database
 
+import database.utils.isLexemeSyntacticallyValid
+
 data class TableRepresentation(
     val name: String,
     val types: List<Lexeme>,

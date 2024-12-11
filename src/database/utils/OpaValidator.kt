@@ -1,5 +1,6 @@
-package database
+package database.utils
 
+import database.*
 import java.io.File
 
 class OpaValidator(
