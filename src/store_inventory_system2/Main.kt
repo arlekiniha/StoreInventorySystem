@@ -14,7 +14,7 @@ fun main() {
         transactionsRepository = transactionsRepository,
     )
 
-    val view = View()
+    val view = View(inventoryRepository)
     val presenter = Presenter(store, view)
     view.initPresenter(presenter)
 
