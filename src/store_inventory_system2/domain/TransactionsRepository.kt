@@ -20,7 +20,7 @@ class RuntimeTransactionsRepository : TransactionsRepository {
     fun getUserTransactions() {
         for (transaction in transactions) {
             if (transaction.type == TransactionType.User) {
-                println(transaction)
+                println(transaction.message)
             }
         }
     }
@@ -28,7 +28,7 @@ class RuntimeTransactionsRepository : TransactionsRepository {
     fun getAdminTransactions() {
         for (transaction in transactions) {
             if (transaction.type == TransactionType.Admin)
-                println(transaction)
+                println(transaction.message)
         }
     }
 }
