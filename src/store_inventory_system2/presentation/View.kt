@@ -2,7 +2,7 @@ package store_inventory_system2.presentation
 
 import store_inventory_system2.domain.InventoryRepository
 
-class View (private val inventoryRepository: InventoryRepository) {
+class View(private val inventoryRepository: InventoryRepository) {
 
     private lateinit var presenter: Presenter
 
@@ -63,6 +63,23 @@ class View (private val inventoryRepository: InventoryRepository) {
         }
     }
 
+    fun showTransactionsInput() {
+        while (true) {
+            println("Choose transactions type: (admin or user)")
+            val input = readln()
+            if (input.lowercase() == "admin") {
+                presenter.getAdminTransactions()
+                return
+            } else if (input.lowercase() == "user") {
+                presenter.getUserTransactions()
+                return
+            } else {
+                inputError()
+                return
+            }
+        }
+    }
+
     fun showBoughtItem(itemName: String, isSuccessful: Boolean) {
         if (isSuccessful) {
             println("You bought $itemName.")
@@ -87,7 +104,7 @@ class View (private val inventoryRepository: InventoryRepository) {
         }
     }
 
-    private fun showAllProducts(){
+    private fun showAllProducts() {
         for (item in inventoryRepository.allItems()) {
             val name = item.name
             val price = item.price
@@ -100,11 +117,11 @@ class View (private val inventoryRepository: InventoryRepository) {
         println("Something went wrong.")
     }
 
-    fun inputError(){
+    fun inputError() {
         println("Invalid input.")
     }
 
-    fun outputError(){
+    fun outputError() {
         println("We can't do it")
     }
 }

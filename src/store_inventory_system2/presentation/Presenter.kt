@@ -1,10 +1,13 @@
 package store_inventory_system2.presentation
 
+import store_inventory_system2.domain.RuntimeTransactionsRepository
 import store_inventory_system2.domain.Store
+import store_inventory_system2.domain.TransactionsRepository
 
 class Presenter(
     private val store: Store,
     private val view: View,
+    private val transactionsRepository: RuntimeTransactionsRepository
 ) {
 
     private var itemName: String = ""
@@ -52,10 +55,18 @@ class Presenter(
         clear()
     }
 
-    fun addItem(){
+    fun addItem() {
         val isAddedSuccessfully = store.addItem(itemName, itemPrice, itemQuantity)
         view.showAddedItem(itemName, isAddedSuccessfully)
         clear()
+    }
+
+    fun getAdminTransactions() {
+        transactionsRepository.getAdminTransactions()
+    }
+
+    fun getUserTransactions() {
+        transactionsRepository.getUserTransactions()
     }
 
     private fun clear() {
@@ -63,5 +74,5 @@ class Presenter(
         itemQuantity = 0
         itemPrice = 0
     }
-
 }
+
