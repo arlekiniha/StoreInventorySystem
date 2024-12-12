@@ -1,10 +1,13 @@
 package store_inventory_system2.presentation
 
+import store_inventory_system2.domain.RuntimeTransactionsRepository
 import store_inventory_system2.domain.Store
+import store_inventory_system2.domain.TransactionsRepository
 
 class Presenter(
     private val store: Store,
     private val view: View,
+    private val transactionsRepository: RuntimeTransactionsRepository
 ) {
 
     private var itemName: String = ""
@@ -13,7 +16,7 @@ class Presenter(
 
     fun updateItemName(name: String): Boolean {
         if (name.isBlank()) {
-            view.showError()
+            view.inputError()
             return false
         }
         itemName = name
@@ -23,7 +26,7 @@ class Presenter(
     fun updateItemQuantity(quantityInput: String): Boolean {
         val quantity = quantityInput.toIntOrNull()
         if (quantity == null || quantity <= 0) {
-            view.showError()
+            view.inputError()
             return false
         }
         itemQuantity = quantity
@@ -33,7 +36,7 @@ class Presenter(
     fun updateItemPrice(priceInput: String): Boolean {
         val price = priceInput.toIntOrNull()
         if (price == null) {
-            view.showError()
+            view.inputError()
             return false
         }
         itemPrice = price
@@ -52,10 +55,18 @@ class Presenter(
         clear()
     }
 
-    fun addItem(){
+    fun addItem() {
         val isAddedSuccessfully = store.addItem(itemName, itemPrice, itemQuantity)
         view.showAddedItem(itemName, isAddedSuccessfully)
         clear()
+    }
+
+    fun getAdminTransactions() {
+        transactionsRepository.getAdminTransactions()
+    }
+
+    fun getUserTransactions() {
+        transactionsRepository.getUserTransactions()
     }
 
     private fun clear() {
@@ -63,5 +74,5 @@ class Presenter(
         itemQuantity = 0
         itemPrice = 0
     }
-
 }
+

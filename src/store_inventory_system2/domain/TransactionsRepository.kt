@@ -17,6 +17,20 @@ class RuntimeTransactionsRepository : TransactionsRepository {
         return transactions
     }
 
+    fun getUserTransactions() {
+        for (transaction in transactions) {
+            if (transaction.type == TransactionType.User) {
+                println(transaction.message)
+            }
+        }
+    }
+
+    fun getAdminTransactions() {
+        for (transaction in transactions) {
+            if (transaction.type == TransactionType.Admin)
+                println(transaction.message)
+        }
+    }
 }
 
 class TestTransactionsRepository : TransactionsRepository {
