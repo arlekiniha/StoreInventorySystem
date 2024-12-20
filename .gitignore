@@ -5,6 +5,8 @@ out/
 
 ### Kotlin ###
 .kotlin
+build
+.gradle
 
 ### Eclipse ###
 .apt_generated
